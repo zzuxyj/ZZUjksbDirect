@@ -38,6 +38,7 @@ else:
 now_user = 0
 for pop_user in user_pool:
     now_user += 1
+    this_one = True
     this_user = pop_user.split("，")
     if len(this_user) != 6:
         print("用户池配置有误，必须重新配置！有一个用户的信息条目数量不为6，或是包含中文逗号")
@@ -141,7 +142,7 @@ for pop_user in user_pool:
                 print("所有用户遍历完毕，结束运行.")
                 exit(0)
             else:
-                pass
+                return "next_one"
         except smtplib.SMTPException:
             print('发送结果的邮箱设置可能异常，请检查邮箱和密码配置，以及发信SMTP服务器配置.')
             raise smtplib.SMTPException
@@ -178,7 +179,6 @@ for pop_user in user_pool:
                 step_1_output = response.text
                 if "验证码" in step_1_output:
                     print("运行时返回需要验证码，将终止本次打卡，您需要在 Action 中合理配置运行时间.")
-                    report_mail(debug_switch)
                 mixed_token = response.text[response.text.rfind('ptopid'):response.text.rfind('"}}\r''\n</script>')]
                 if "hidden" in mixed_token:
                     step_1_calc += 1
@@ -204,7 +204,9 @@ for pop_user in user_pool:
                 else:
                     print("获取 token 中" + str(step_1_calc)
                           + "次失败，没有response，可能学校服务器故障，或者学号或密码有误，次数达到预期，终止本次打卡，报告失败情况.")
-                    report_mail(debug_switch)
+                    if report_mail(debug_switch) == "next_one":
+                        this_one = False
+                        break
         except requests.exceptions.SSLError:
             if step_1_calc < 3:
                 step_1_calc += 1
@@ -214,12 +216,16 @@ for pop_user in user_pool:
             else:
                 print("获取 token 中" + str(step_1_calc)
                       + "次失败，服务器提示SSLError，次数达到预期，终止本次打卡，报告失败情况.")
-                report_mail(debug_switch)
+                if report_mail(debug_switch) == "next_one":
+                    this_one = False
+                    break
 
     # 第二步 提交填报人
     header["Referer"] = 'https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/jksb'
     # response = False
     while step_2_calc < 4:
+        if not this_one:
+            break
         try:
             response = session.post('https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/jksb', headers=header,
                                     data=step_2_data,
@@ -232,16 +238,22 @@ for pop_user in user_pool:
                 elif "无权" in step_2_output:
                     print("提交填报人" + str(step_2_calc)
                           + "次失败，可能是学号或密码有误，终止用户" + str(now_user) + "打卡，报告失败情况.")
-                    report_mail(debug_switch)
+                    if report_mail(debug_switch) == "next_one":
+                        this_one = False
+                        break
                 elif "验证码" in step_2_output:
                     print("提交填报人" + str(step_2_calc)
                           + "次失败，服务器返回需要验证码，可能是请求过于频繁，终止用户"
                           + str(now_user) + "打卡，报告失败情况.")
-                    report_mail(debug_switch)
+                    if report_mail(debug_switch) == "next_one":
+                        this_one = False
+                        break
                 else:
                     print("提交填报人" + str(step_2_calc)
                           + "次失败，返回内容在 else ，原因未知，终止用户" + str(now_user) + "打卡，报告失败情况.")
-                    report_mail(debug_switch)
+                    if report_mail(debug_switch) == "next_one":
+                        this_one = False
+                        break
             else:
                 if step_2_calc < 3:
                     step_2_calc += 1
@@ -252,7 +264,9 @@ for pop_user in user_pool:
                     print("提交填报人" + str(step_2_calc)
                           + "次失败，没有response，可能学校服务器故障，次数达到预期，终止用户"
                           + str(now_user) + "打卡，报告失败情况.")
-                    report_mail(debug_switch)
+                    if report_mail(debug_switch) == "next_one":
+                        this_one = False
+                        break
         except requests.exceptions.SSLError:
             if step_2_calc < 3:
                 step_2_calc += 1
@@ -263,11 +277,15 @@ for pop_user in user_pool:
                 print("提交填报人" + str(step_2_calc)
                       + "次失败，服务器提示SSLError，次数达到预期，终止用户"
                       + str(now_user) + "本次打卡，报告失败情况.")
-                report_mail(debug_switch)
+                if report_mail(debug_switch) == "next_one":
+                    this_one = False
+                    break
 
     # 第三步 提交表格
     # response = False
     while step_3_calc < 4:
+        if not this_one:
+            break
         try:
             response = session.post('https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/jksb', headers=header,
                                     data=public_data,
@@ -281,8 +299,9 @@ for pop_user in user_pool:
                     print("填报表格中" + str(step_3_calc)
                           + "次失败，可能打卡平台增加了新内容，或是用户"
                           + str(now_user) + "今日打卡结果已被审核而不能再修改，请检查返回邮件信息.")
-                    report_mail(debug_switch)
-                    break
+                    if report_mail(debug_switch) == "next_one":
+                        this_one = False
+                        break
             else:
                 if step_3_calc < 3:
                     step_3_calc += 1
@@ -294,7 +313,9 @@ for pop_user in user_pool:
                     print("填报表格中" + str(step_3_calc)
                           + "次失败，没有response，可能学校服务器故障，次数达到预期，终止用户"
                           + str(now_user) + "打卡，报告失败情况.")
-                    report_mail(debug_switch)
+                    if report_mail(debug_switch) == "next_one":
+                        this_one = False
+                        break
         except requests.exceptions.SSLError:
             if step_3_calc < 3:
                 step_3_calc += 1
@@ -305,9 +326,13 @@ for pop_user in user_pool:
                 print("填报表格中" + str(step_3_calc)
                       + "次失败，服务器提示SSLError，次数达到预期，终止用户"
                       + str(now_user) + "打卡，报告失败情况.")
-                report_mail(debug_switch)
+                if report_mail(debug_switch) == "next_one":
+                    this_one = False
+                    break
 
     # 分析上报结果
+    if not this_one:
+        continue
     result = step_3_output
     if "感谢你今日上报" in result:
         result_flag = True
@@ -315,15 +340,21 @@ for pop_user in user_pool:
     elif "由于如下原因" in result:
         result_flag = False
         print("注意：用户" + str(now_user) + "上报失败！！代码需要更新，返回提示有新增或不匹配项目，或是今日已被审核，而不能再上报.")
-        report_mail(debug_switch)
+        if report_mail(debug_switch) == "next_one":
+            this_one = False
+            break
     elif "重新登录" in result:
         result_flag = False
         print("注意：用户" + str(now_user) + "上报失败！！可能是用户名或密码错误，或服务器响应超时.")
-        report_mail(debug_switch)
+        if report_mail(debug_switch) == "next_one":
+            this_one = False
+            break
     else:
         result_flag = False
         print("注意：用户" + str(now_user) + "上报失败！！原因未知，请自行检查返回结果和邮件中的变量输出.")
-        report_mail(debug_switch)
+        if report_mail(debug_switch) == "next_one":
+            this_one = False
+            break
 
     # 总是发送邮件设定为 True 时，发送邮件
     if always_fail:
