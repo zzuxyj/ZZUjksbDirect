@@ -122,11 +122,21 @@ for pop_user in user_pool:
             if mail_host == "Zero":
                 print('发送结果的邮箱设置异常，请在 mail_public_config.json 中检查邮箱的域名配置，以及发信SMTP服务器配置.')
                 raise smtplib.SMTPException
-            smtp_obj = smtplib.SMTP_SSL(mail_host, mail_port)
-            smtp_obj.login(mail_id, mail_pd)
-            smtp_obj.sendmail(mail_id, mail_target, mail_message.as_string())
-            smtp_obj.quit()
-            print('用户' + str(now_user) + '具体提示信息已发送到邮箱，内容包含个人敏感信息，请勿泄露邮件内容.')
+            if "encryption" in public_mail_config[each_host].keys():
+                smtp_obj = smtplib.SMTP(mail_host, mail_port)
+                smtp_obj.ehlo()
+                smtp_obj.starttls()
+                smtp_obj.ehlo()
+                smtp_obj.login(mail_id, mail_pd)
+                smtp_obj.sendmail(mail_id, mail_target, mail_message.as_string())
+                smtp_obj.quit()
+                print('用户' + str(now_user) + '具体提示信息已发送到邮箱，内容包含个人敏感信息，请勿泄露邮件内容.')
+            else:
+                smtp_obj = smtplib.SMTP_SSL(mail_host, mail_port)
+                smtp_obj.login(mail_id, mail_pd)
+                smtp_obj.sendmail(mail_id, mail_target, mail_message.as_string())
+                smtp_obj.quit()
+                print('用户' + str(now_user) + '具体提示信息已发送到邮箱，内容包含个人敏感信息，请勿泄露邮件内容.')
             if now_user >= len(user_pool):
                 print("所有用户遍历完毕，结束运行.")
                 exit(0)

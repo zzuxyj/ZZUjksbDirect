@@ -1,6 +1,6 @@
 {
   "title": "jksb 问题报告",
-  "symbol": ["zzu.edu.cn", "qq.com"],
+  "symbol": ["zzu.edu.cn", "qq.com", "hotmail.com"],
   "zzu.edu.cn": {
     "host": "mail.v.zzu.edu.cn",
     "port": "465"
@@ -8,5 +8,15 @@
   "qq.com": {
     "host": "smtp.qq.com",
     "port": "465"
+  },
+  "hotmail.com": {
+    "host": "smtp.office365.com",
+    "port": "587",
+    "encryption": "STARTTLS"
+  },
+  "gmail.com": {
+    "host": "smtp.gmail.com",
+    "port": "587",
+    "encryption": "STARTTLS"
   }
 }
