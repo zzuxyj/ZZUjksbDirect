@@ -1,6 +1,6 @@
 {
   "title": "jksb 问题报告",
-  "symbol": ["zzu.edu.cn", "qq.com", "hotmail.com"],
+  "symbol": ["zzu.edu.cn", "qq.com", "hotmail.com", "gmail.com"],
   "zzu.edu.cn": {
     "host": "mail.v.zzu.edu.cn",
     "port": "465"
