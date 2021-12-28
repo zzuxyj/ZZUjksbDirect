@@ -1,5 +1,12 @@
 {
-  "host": "mail.v.zzu.edu.cn",
-  "port": "465",
-  "title": "jksbDirect Problems"
+  "title": "jksbDirect Problems",
+  "symbol": ["zzu.edu.cn", "qq.com"],
+  "zzu.edu.cn": {
+    "host": "mail.v.zzu.edu.cn",
+    "port": "465"
+  },
+  "qq.com": {
+    "host": "smtp.qq.com",
+    "port": "465"
+  }
 }

@@ -25,13 +25,8 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Start jksb Direct.
       env:
-        user_id: ${{secrets.user_id}}
-        user_pd: ${{secrets.user_pd}}
         mail_id: ${{secrets.mail_id}}
         mail_pd: ${{secrets.mail_pd}}
-        mail_target: ${{secrets.mail_target}}
-        city_code: ${{secrets.city_code}}
-        location: ${{secrets.location}}
-        real_name: ${{secrets.real_name}}
+        processing_pool: ${{secrets.processing_pool}}
       run: |
-        python Application.py "$user_id" "$user_pd" "$mail_id" "$mail_pd" "$mail_target" "$city_code" "$location" "$real_name"
+        python Application.py "$mail_id" "$mail_pd" "$processing_pool"
