@@ -282,6 +282,7 @@ for pop_user in user_pool:
                           + "次失败，可能打卡平台增加了新内容，或是用户"
                           + str(now_user) + "今日打卡结果已被审核而不能再修改，请检查返回邮件信息.")
                     report_mail(debug_switch)
+                    break
             else:
                 if step_3_calc < 3:
                     step_3_calc += 1
