@@ -5,6 +5,7 @@ import sys
 import json
 import smtplib
 from email.mime.text import MIMEText
+from time import sleep
 
 import requests
 
@@ -19,13 +20,8 @@ mail_id = sys.argv[1]
 mail_pd = sys.argv[2]
 processing_pool = sys.argv[3]
 # 第 3 个参数传递多用户填报信息，格式如下：
-# "学号，密码，城市码，地理位置，真实姓名，反馈邮箱（接收邮件）！学号2，密码2，城市码2，地理位置2..."
+# "学号，密码，城市码，地理位置，真实姓名，反馈邮箱（接收邮件），可选的疫苗接种情况！学号2，密码2，城市码2，地理位置2..."
 # 以中文逗号分隔，子项目不得包含中文逗号和中文感叹号，每个用户以中文感叹号分割
-
-# 读取开放表单数据
-with open("config.json", "rb") as file_obj:
-    public_data = json.load(file_obj)
-    file_obj.close()
 
 # 分割多用户列表解析
 if "！" in processing_pool:
@@ -40,19 +36,27 @@ for pop_user in user_pool:
     now_user += 1
     this_one = True
     this_user = pop_user.split("，")
-    if len(this_user) != 6:
-        print("用户池配置有误，必须重新配置！有一个用户的信息条目数量不为6，或是包含中文逗号")
-        exit(1)
+    # 单个用户信息检查
+    if len(this_user) < 6:
+        print("用户" + str(now_user) + "池配置有误，必须重新配置！此用户信息条目数量少于6，将被忽略.")
+        continue
     user_id = this_user[0]
     user_pd = this_user[1]
     city_code = this_user[2]
     location = this_user[3]
     real_name = this_user[4]
     mail_target = this_user[5]
-    # 创建所有变量方便维护
+    # 读取开放表单数据
+    with open("config.json", "rb") as file_obj:
+        public_data = json.load(file_obj)
+        file_obj.close()
+    # 修改开放表单的默认值为特定值
     public_data['myvs_13a'] = city_code[:2]
     public_data['myvs_13b'] = city_code
     public_data['myvs_13c'] = location
+    if len(this_user) == 7:     # 当存在疫苗接种情况可选项时取其值，当值不在指定范围时忽略
+        if (this_user[6] == "1") or (this_user[6] == "2") or (this_user[6] == "3") or (this_user[6] == "4"):
+            public_data['myvs_26'] = this_user[6]
     step_1_calc = 0
     step_1_output = False
     step_1_state = False
@@ -67,6 +71,7 @@ for pop_user in user_pool:
     response = False
     mixed_token = False
     all_input = sys.argv
+    sleep(12)   # 每个用户之间延时，以提高成功率
 
     # 创建发送邮件的方法
     def report_mail(full_info=debug_switch):
@@ -115,15 +120,20 @@ for pop_user in user_pool:
         try:
             mail_host = "Zero"
             mail_port = "0"
+            this_host = "Zero"
             for each_host in public_mail_config["symbol"]:
                 if each_host in mail_id:
                     mail_host = public_mail_config[each_host]["host"]
                     mail_port = public_mail_config[each_host]["port"]
+                    this_host = each_host
                     break
             if mail_host == "Zero":
                 print('发送结果的邮箱设置异常，请在 mail_public_config.json 中检查邮箱的域名配置，以及发信SMTP服务器配置.')
                 raise smtplib.SMTPException
-            if "encryption" in public_mail_config[each_host].keys():
+            if this_host == "Zero":
+                print('发送结果的邮箱设置异常，请确保 mail_public_config.json 中包含您的邮箱配置.')
+                raise smtplib.SMTPException
+            if "encryption" in public_mail_config[this_host].keys():
                 smtp_obj = smtplib.SMTP(mail_host, mail_port)
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
