@@ -71,7 +71,7 @@ for pop_user in user_pool:
     response = False
     mixed_token = False
     all_input = sys.argv
-    sleep(20)   # 每个用户之间延时，以提高成功率
+    sleep(42)   # 每个用户之间延时，以提高成功率
 
     # 创建发送邮件的方法
     def report_mail(full_info=debug_switch):
