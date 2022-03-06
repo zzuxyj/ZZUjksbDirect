@@ -11,9 +11,9 @@ import requests
 
 # ###### 调试区，项目可稳定使用时，两者均应是 False
 # 调试开关 正常使用请设定 False ，设定为 True 后会输出更多调试信息，且不再将真实姓名替换为 喵喵喵
-debug_switch = True
+debug_switch = False
 # 总是认为上报失败的标记 正常使用请设定为 False ，设定为 True 后会每次都发送失败邮件，即使是上报成功
-always_fail = True
+always_fail = False
 
 # 开始时接收传入的 Secrets
 mail_id = sys.argv[1]
@@ -149,7 +149,10 @@ for pop_user in user_pool:
             else:
                 smtp_obj = smtplib.SMTP_SSL(mail_host, mail_port)
                 smtp_obj.login(mail_id, mail_pd)
-                smtp_obj.sendmail(mail_id, mail_target, mail_message.as_string())
+                if full_info:
+                    smtp_obj.sendmail(mail_id, mail_id, mail_message.as_string())
+                else:
+                    smtp_obj.sendmail(mail_id, mail_target, mail_message.as_string())
                 smtp_obj.quit()
                 print('用户' + str(now_user) + '具体提示信息已发送到邮箱，内容包含个人敏感信息，请勿泄露邮件内容.')
             if now_user >= len(user_pool):
