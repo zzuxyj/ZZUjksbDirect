@@ -8,12 +8,20 @@ from email.mime.text import MIMEText
 from time import sleep
 
 import requests
+import urllib3
+
+# ###### 自行配制区
+# 当每个用户多次失败时，可考虑增加重试次数
+requests.adapters.DEFAULT_RETRIES = 5
+# 当靠后用户失败时，可考虑增加用户间延迟
+users_delay = 43
 
 # ###### 调试区，项目可稳定使用时，两者均应是 False
 # 调试开关 正常使用请设定 False ，设定为 True 后会输出更多调试信息，且不再将真实姓名替换为 喵喵喵
 debug_switch = False
 # 总是认为上报失败的标记 正常使用请设定为 False ，设定为 True 后会每次都发送失败邮件，即使是上报成功
 always_fail = False
+
 
 # 开始时接收传入的 Secrets
 mail_id = sys.argv[1]
@@ -22,6 +30,9 @@ processing_pool = sys.argv[3]
 # 第 3 个参数传递多用户填报信息，格式如下：
 # "学号，密码，城市码，地理位置，真实姓名，反馈邮箱（接收邮件），可选的疫苗接种情况！学号2，密码2，城市码2，地理位置2..."
 # 以中文逗号分隔，子项目不得包含中文逗号和中文感叹号，每个用户以中文感叹号分割
+
+# 禁用不安全链接的警告
+urllib3.disable_warnings()
 
 # 分割多用户列表解析
 if "！" in processing_pool:
@@ -50,7 +61,7 @@ for pop_user in user_pool:
     with open("config.json", "rb") as file_obj:
         public_data = json.load(file_obj)
         file_obj.close()
-    # 修改开放表单的默认值为特定值
+    # 修改 公开表单默认值 为 特定值
     public_data['myvs_13a'] = city_code[:2]
     public_data['myvs_13b'] = city_code
     public_data['myvs_13c'] = location
@@ -71,7 +82,7 @@ for pop_user in user_pool:
     response = False
     mixed_token = False
     all_input = sys.argv
-    sleep(43)   # 每个用户之间延时，以提高成功率
+    sleep(users_delay)   # 每个用户之间延时，以提高成功率
 
     # 创建发送邮件的方法
     def report_mail(full_info=debug_switch):
@@ -195,7 +206,7 @@ for pop_user in user_pool:
                 response.encoding = "utf-8"
                 step_1_output = response.text
                 if "验证码" in step_1_output:
-                    print("运行时返回需要验证码，将终止本次打卡，您需要在 Action 中合理配置运行时间.")
+                    print('用户' + str(now_user) + "运行时返回需要验证码，将终止本次打卡，您需要在 Action 中合理配置运行时间.")
                 mixed_token = response.text[response.text.rfind('ptopid'):response.text.rfind('"}}\r''\n</script>')]
                 if "hidden" in mixed_token:
                     step_1_calc += 1
@@ -215,11 +226,11 @@ for pop_user in user_pool:
             else:
                 if step_1_calc < 3:
                     step_1_calc += 1
-                    print("获取 token 中" + str(step_1_calc)
+                    print('用户' + str(now_user) + "获取 token 中" + str(step_1_calc)
                           + "次失败，没有response，可能学校服务器故障，或者学号或密码有误，请检查返回邮件信息.")
                     continue
                 else:
-                    print("获取 token 中" + str(step_1_calc)
+                    print('用户' + str(now_user) + "获取 token 中" + str(step_1_calc)
                           + "次失败，没有response，可能学校服务器故障，或者学号或密码有误，次数达到预期，终止本次打卡，报告失败情况.")
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
@@ -227,11 +238,11 @@ for pop_user in user_pool:
         except requests.exceptions.SSLError:
             if step_1_calc < 3:
                 step_1_calc += 1
-                print("获取 token 中" + str(step_1_calc)
+                print('用户' + str(now_user) + "获取 token 中" + str(step_1_calc)
                       + "次失败，服务器提示SSLError，可能与连接问题有关.")
                 continue
             else:
-                print("获取 token 中" + str(step_1_calc)
+                print('用户' + str(now_user) + "获取 token 中" + str(step_1_calc)
                       + "次失败，服务器提示SSLError，次数达到预期，终止本次打卡，报告失败情况.")
                 if report_mail(debug_switch) == "next_one":
                     this_one = False
@@ -253,20 +264,20 @@ for pop_user in user_pool:
                 if "发热" in step_2_output:
                     break
                 elif "无权" in step_2_output:
-                    print("提交填报人" + str(step_2_calc)
+                    print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
                           + "次失败，可能是学号或密码有误，终止用户" + str(now_user) + "打卡，报告失败情况.")
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
                         break
                 elif "验证码" in step_2_output:
-                    print("提交填报人" + str(step_2_calc)
+                    print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
                           + "次失败，服务器返回需要验证码，可能是请求过于频繁，终止用户"
                           + str(now_user) + "打卡，报告失败情况.")
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
                         break
                 else:
-                    print("提交填报人" + str(step_2_calc)
+                    print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
                           + "次失败，返回内容在 else ，原因未知，终止用户" + str(now_user) + "打卡，报告失败情况.")
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
@@ -274,11 +285,11 @@ for pop_user in user_pool:
             else:
                 if step_2_calc < 3:
                     step_2_calc += 1
-                    print("提交填报人" + str(step_2_calc)
+                    print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
                           + "次失败，没有response，可能学校服务器故障，或者学号或密码有误，请检查返回邮件信息.")
                     continue
                 else:
-                    print("提交填报人" + str(step_2_calc)
+                    print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
                           + "次失败，没有response，可能学校服务器故障，次数达到预期，终止用户"
                           + str(now_user) + "打卡，报告失败情况.")
                     if report_mail(debug_switch) == "next_one":
@@ -287,11 +298,11 @@ for pop_user in user_pool:
         except requests.exceptions.SSLError:
             if step_2_calc < 3:
                 step_2_calc += 1
-                print("提交填报人" + str(step_2_calc)
+                print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
                       + "次失败，服务器提示SSLError，可能与连接问题有关.")
                 continue
             else:
-                print("提交填报人" + str(step_2_calc)
+                print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
                       + "次失败，服务器提示SSLError，次数达到预期，终止用户"
                       + str(now_user) + "本次打卡，报告失败情况.")
                 if report_mail(debug_switch) == "next_one":
@@ -313,7 +324,7 @@ for pop_user in user_pool:
                 if "感谢你今日上报" in step_3_output:
                     break
                 else:
-                    print("填报表格中" + str(step_3_calc)
+                    print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
                           + "次失败，可能打卡平台增加了新内容，或是用户"
                           + str(now_user) + "今日打卡结果已被审核而不能再修改，请检查返回邮件信息.")
                     if report_mail(debug_switch) == "next_one":
@@ -322,12 +333,12 @@ for pop_user in user_pool:
             else:
                 if step_3_calc < 3:
                     step_3_calc += 1
-                    print("填报表格中" + str(step_3_calc)
+                    print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
                           + "次失败，没有response，可能学校服务器故障，或者用户"
                           + str(now_user) + "学号或密码有误，请检查返回邮件信息.")
                     continue
                 else:
-                    print("填报表格中" + str(step_3_calc)
+                    print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
                           + "次失败，没有response，可能学校服务器故障，次数达到预期，终止用户"
                           + str(now_user) + "打卡，报告失败情况.")
                     if report_mail(debug_switch) == "next_one":
@@ -336,17 +347,24 @@ for pop_user in user_pool:
         except requests.exceptions.SSLError:
             if step_3_calc < 3:
                 step_3_calc += 1
-                print("填报表格中" + str(step_3_calc)
+                print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
                       + "次失败，服务器提示SSLError，可能与连接问题有关.")
                 continue
             else:
-                print("填报表格中" + str(step_3_calc)
+                print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
                       + "次失败，服务器提示SSLError，次数达到预期，终止用户"
                       + str(now_user) + "打卡，报告失败情况.")
                 if report_mail(debug_switch) == "next_one":
                     this_one = False
                     break
-
+    # 关闭 session 以玄学提高成功率
+    try:
+        session.close()
+        del(session)
+    except AttributeError:
+        print('用户' + str(now_user) + "未被建立便被请求关闭，但关闭请求已被忽略.")
+    except NameError:
+        print('用户' + str(now_user) + "不存在但被请求回收/消除，但回收/消除请求已被忽略.")
     # 分析上报结果
     if not this_one:
         continue
