@@ -14,10 +14,10 @@ import urllib3
 # 当每个用户多次失败时，可考虑增加重试次数
 requests.adapters.DEFAULT_RETRIES = 5
 # 当靠后用户失败时，可考虑增加用户间延迟
-users_delay = 43
+users_delay = 25
 
 # ###### 调试区，项目可稳定使用时，两者均应是 False
-# 调试开关 正常使用请设定 False ，设定为 True 后会输出更多调试信息，且不再将真实姓名替换为 喵喵喵
+# 调试开关 正常使用请设定 False ，设定为 True 后会输出更多调试信息，且不再将真实姓名等隐私信息替换为 喵喵喵
 debug_switch = False
 # 总是认为上报失败的标记 正常使用请设定为 False ，设定为 True 后会每次都发送失败邮件，即使是上报成功
 always_fail = False
@@ -105,20 +105,16 @@ for pop_user in user_pool:
                               'result': result
                               }
         else:
-            if type(result) == str:
-                replaced_result = result.replace(real_name, "喵喵喵")
-            else:
-                replaced_result = result
             this_time_vars = {'result_flag': result_flag,
-                              'step_1_output': step_1_output,
+                              'step_1_output': step_1_output.replace(real_name, "喵喵喵").replace(user_id, "喵喵喵"),
                               'step_1_calc': step_1_calc,
                               'step_1_state': step_1_state,
-                              'step_2_output': step_2_output,
                               'step_2_calc': step_2_calc,
                               'step_2_state': step_2_state,
                               'step_3_calc': step_3_calc,
+                              'step_3_output': step_3_output.replace(real_name, "喵喵喵").replace(user_id, "喵喵喵"),
                               'step_3_state': step_3_state,
-                              'result': replaced_result
+                              'result': result.replace(real_name, "喵喵喵").replace(user_id, "喵喵喵")
                               }
         with open("mail_public_config.json", 'rb') as file_obj_inner:
             public_mail_config = json.load(file_obj_inner)
@@ -262,6 +258,7 @@ for pop_user in user_pool:
                 response.encoding = "utf-8"
                 step_2_output = response.text
                 if "发热" in step_2_output:
+                    step_2_state = True
                     break
                 elif "无权" in step_2_output:
                     print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
@@ -322,23 +319,24 @@ for pop_user in user_pool:
                 response.encoding = "utf-8"
                 step_3_output = response.text
                 if "感谢你今日上报" in step_3_output:
+                    step_3_state = True
                     break
                 else:
-                    print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
+                    print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
                           + "次失败，可能打卡平台增加了新内容，或是用户"
-                          + str(now_user) + "今日打卡结果已被审核而不能再修改，请检查返回邮件信息.")
+                          + str(now_user) + "今日打卡结果已被审核而不能再修改，请检查返回邮件信息（第三步回应内容不包含成功提示）.")
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
                         break
             else:
                 if step_3_calc < 3:
                     step_3_calc += 1
-                    print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
+                    print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
                           + "次失败，没有response，可能学校服务器故障，或者用户"
                           + str(now_user) + "学号或密码有误，请检查返回邮件信息.")
                     continue
                 else:
-                    print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
+                    print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
                           + "次失败，没有response，可能学校服务器故障，次数达到预期，终止用户"
                           + str(now_user) + "打卡，报告失败情况.")
                     if report_mail(debug_switch) == "next_one":
@@ -347,11 +345,11 @@ for pop_user in user_pool:
         except requests.exceptions.SSLError:
             if step_3_calc < 3:
                 step_3_calc += 1
-                print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
+                print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
                       + "次失败，服务器提示SSLError，可能与连接问题有关.")
                 continue
             else:
-                print('用户' + str(now_user) + "填报表格中" + str(step_3_calc)
+                print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
                       + "次失败，服务器提示SSLError，次数达到预期，终止用户"
                       + str(now_user) + "打卡，报告失败情况.")
                 if report_mail(debug_switch) == "next_one":
