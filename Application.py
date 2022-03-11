@@ -69,15 +69,15 @@ for pop_user in user_pool:
         if (this_user[6] == "1") or (this_user[6] == "2") or (this_user[6] == "3") or (this_user[6] == "4"):
             public_data['myvs_26'] = this_user[6]
     step_1_calc = 0
-    step_1_output = False
+    step_1_output = ""
     step_1_state = False
     step_2_calc = 0
-    step_2_output = False
+    step_2_output = ""
     step_2_state = False
     step_3_calc = 0
-    step_3_output = False
+    step_3_output = ""
     step_3_state = False
-    result = 0
+    result = ""
     result_flag = 0
     response = False
     mixed_token = False
