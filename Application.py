@@ -23,24 +23,25 @@ debug_switch = False
 # 总是认为上报失败的标记 正常使用请设定为 False ，设定为 True 后会每次都发送失败邮件，即使是上报成功
 always_fail = False
 
-# json 获取与创建
-try:
-    original_json = open("signed.json", "r")
-    signed_json = json.load(original_json)
-    original_json.close()
-except FileNotFoundError:
-    signed_json = {"date": ['2000', '1', '1'],
-                   "signed": []}
-
-# 采集当前日期 注意这里的时间应该是GMT时间，落后北京时间8小时
-severs_time = datetime.now().strftime('%Y-%m-%d-%H').split('-')  # ['2022', '03', '18', '23']
-if int(severs_time[3]) > 15:
-    severs_time[2] = str(int(severs_time[2]) + 1)
-# 判断是否是新日期，若不是新日期则忽略，若是新日期则清空打卡列表
-if severs_time == signed_json['date']:
-    pass
-else:
-    signed_json['signed'] = []
+# # json 获取与创建
+# try:
+#     original_json = open("signed.json", "r")
+#     signed_json = json.load(original_json)
+#     original_json.close()
+# except FileNotFoundError:
+#     signed_json = {"date": ['2000', '1', '1'],
+#                    "signed": []}
+#
+# # 采集当前日期 注意这里的时间应该是GMT时间，落后北京时间8小时
+# severs_time = datetime.now().strftime('%Y-%m-%d-%H').split('-')  # ['2022', '03', '18', '23']
+# if int(severs_time[3]) > 15:
+#     severs_time[2] = str(int(severs_time[2]) + 1)
+# # 判断是否是新日期，若不是新日期则忽略，若是新日期则清空打卡列表
+# if severs_time == signed_json['date']:
+#     pass
+# else:
+#     signed_json['date'] = severs_time[0:3]
+#     signed_json['signed'] = []
 
 # 开始时接收传入的 Secrets
 mail_id = sys.argv[1]
@@ -63,9 +64,9 @@ else:
 # 对单个用户进行循环
 now_user = 0
 for pop_user in user_pool:
-    if now_user in signed_json['signed']:   # 若已打卡则直接跳过
-        print('用户' + str(now_user + 1) + '记录报告打卡完毕，跳过.')
-        continue
+    # if now_user in signed_json['signed']:   # 若已打卡则直接跳过
+    #     print('用户' + str(now_user + 1) + '记录报告打卡完毕，跳过.')
+    #     continue
     now_user += 1
     this_one = True
     this_user = pop_user.split("，")
@@ -416,7 +417,7 @@ for pop_user in user_pool:
     if always_fail:
         report_mail(debug_switch)
 
-new_signed_json = open('signed.json', 'w')
-json.dump(signed_json, new_signed_json)
-new_signed_json.flush()
-new_signed_json.close()
+# new_signed_json = open('signed.json', 'w')
+# json.dump(signed_json, new_signed_json)
+# new_signed_json.flush()
+# new_signed_json.close()
