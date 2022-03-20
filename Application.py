@@ -25,7 +25,7 @@ always_fail = False
 
 # json 获取与创建
 try:
-    original_json = open("signed.json", "rb")
+    original_json = open("signed.json", "r")
     signed_json = json.load(original_json)
     original_json.close()
 except FileNotFoundError:
@@ -416,7 +416,7 @@ for pop_user in user_pool:
     if always_fail:
         report_mail(debug_switch)
 
-new_signed_json = open('signed.json', 'wb')
+new_signed_json = open('signed.json', 'w')
 json.dump(signed_json, new_signed_json)
 new_signed_json.flush()
 new_signed_json.close()
