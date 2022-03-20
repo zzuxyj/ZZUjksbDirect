@@ -25,6 +25,7 @@ jobs:
       with:
         name: Download signed.json
     - name: Start jksb Direct.
+      if: always()
       env:
         mail_id: ${{secrets.mail_id}}
         mail_pd: ${{secrets.mail_pd}}
