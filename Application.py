@@ -199,8 +199,8 @@ for pop_user in user_pool:
     info = {}
     header = {"Origin": "https://jksb.v.zzu.edu.cn",
               "Referer": "https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/first0",
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                            "Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.56",
+              # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+              #               "Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.56",
               "Host": "jksb.v.zzu.edu.cn"
               }
     post_data = {"uid": user_id,
