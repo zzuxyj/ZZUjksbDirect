@@ -392,7 +392,7 @@ for pop_user in user_pool:
     result = step_3_output
     if "感谢你今日上报" in result:
         result_flag = True
-        signed_json['signed'].append(now_user - 1)  # 打卡完成，记录入json
+        # signed_json['signed'].append(now_user - 1)  # 打卡完成，记录入json
         print("用户" + str(now_user) + "上报成功")
     elif "由于如下原因" in result:
         result_flag = False
