@@ -1,2 +1,5 @@
 requests~=2.23.0
 urllib3~=1.25.11
+cryptography
+pyOpenSSL
+certifi

@@ -6,6 +6,7 @@ import json
 import smtplib
 from email.mime.text import MIMEText
 from time import sleep
+from datetime import datetime
 
 import requests
 import urllib3
@@ -22,6 +23,25 @@ debug_switch = False
 # 总是认为上报失败的标记 正常使用请设定为 False ，设定为 True 后会每次都发送失败邮件，即使是上报成功
 always_fail = False
 
+# # json 获取与创建
+# try:
+#     original_json = open("signed.json", "r")
+#     signed_json = json.load(original_json)
+#     original_json.close()
+# except FileNotFoundError:
+#     signed_json = {"date": ['2000', '1', '1'],
+#                    "signed": []}
+#
+# # 采集当前日期 注意这里的时间应该是GMT时间，落后北京时间8小时
+# severs_time = datetime.now().strftime('%Y-%m-%d-%H').split('-')  # ['2022', '03', '18', '23']
+# if int(severs_time[3]) > 15:
+#     severs_time[2] = str(int(severs_time[2]) + 1)
+# # 判断是否是新日期，若不是新日期则忽略，若是新日期则清空打卡列表
+# if severs_time == signed_json['date']:
+#     pass
+# else:
+#     signed_json['date'] = severs_time[0:3]
+#     signed_json['signed'] = []
 
 # 开始时接收传入的 Secrets
 mail_id = sys.argv[1]
@@ -44,6 +64,9 @@ else:
 # 对单个用户进行循环
 now_user = 0
 for pop_user in user_pool:
+    # if now_user in signed_json['signed']:   # 若已打卡则直接跳过
+    #     print('用户' + str(now_user + 1) + '记录报告打卡完毕，跳过.')
+    #     continue
     now_user += 1
     this_one = True
     this_user = pop_user.split("，")
@@ -177,8 +200,8 @@ for pop_user in user_pool:
     info = {}
     header = {"Origin": "https://jksb.v.zzu.edu.cn",
               "Referer": "https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/first0",
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                            "Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.56",
+              # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+              #               "Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.56",
               "Host": "jksb.v.zzu.edu.cn"
               }
     post_data = {"uid": user_id,
@@ -358,7 +381,7 @@ for pop_user in user_pool:
     # 关闭 session 以玄学提高成功率
     try:
         session.close()
-        del(session)
+        del session
     except AttributeError:
         print('用户' + str(now_user) + "未被建立便被请求关闭，但关闭请求已被忽略.")
     except NameError:
@@ -369,6 +392,7 @@ for pop_user in user_pool:
     result = step_3_output
     if "感谢你今日上报" in result:
         result_flag = True
+        signed_json['signed'].append(now_user - 1)  # 打卡完成，记录入json
         print("用户" + str(now_user) + "上报成功")
     elif "由于如下原因" in result:
         result_flag = False
@@ -392,3 +416,8 @@ for pop_user in user_pool:
     # 总是发送邮件设定为 True 时，发送邮件
     if always_fail:
         report_mail(debug_switch)
+
+# new_signed_json = open('signed.json', 'w')
+# json.dump(signed_json, new_signed_json)
+# new_signed_json.flush()
+# new_signed_json.close()
