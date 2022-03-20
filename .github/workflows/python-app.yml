@@ -33,6 +33,7 @@ jobs:
       run: |
         python Application.py "$mail_id" "$mail_pd" "$processing_pool"
     - uses: actions/upload-artifact@v3
+      if: always()
       with:
         name: Upload signed.json
         path: signed.json
