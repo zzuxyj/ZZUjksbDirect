@@ -10,9 +10,7 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.7
@@ -23,6 +21,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - uses: actions/download-artifact@v3
+      with:
+        name: Download signed.json
     - name: Start jksb Direct.
       env:
         mail_id: ${{secrets.mail_id}}
@@ -30,3 +31,7 @@ jobs:
         processing_pool: ${{secrets.processing_pool}}
       run: |
         python Application.py "$mail_id" "$mail_pd" "$processing_pool"
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Upload signed.json
+        path: signed.json
