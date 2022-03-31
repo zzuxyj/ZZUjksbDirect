@@ -77,7 +77,13 @@ for pop_user in user_pool:
     user_id = this_user[0]
     user_pd = this_user[1]
     city_code = this_user[2]
-    location = this_user[3]
+    if "@" in this_user[3]:
+        # 若存在需要修正 memo22 显示位置的配置，则解析
+        location = this_user[3].split("@")[0]
+        location_get = this_user[3].split("@")[1]
+    else:
+        location = this_user[3]
+        location_get = False
     real_name = this_user[4]
     mail_target = this_user[5]
     # 读取开放表单数据
@@ -91,6 +97,8 @@ for pop_user in user_pool:
     if len(this_user) == 7:     # 当存在疫苗接种情况可选项时取其值，当值不在指定范围时忽略
         if (this_user[6] == "1") or (this_user[6] == "2") or (this_user[6] == "3") or (this_user[6] == "4"):
             public_data['myvs_26'] = this_user[6]
+    if location_get:
+        public_data['memo22'] = location_get
     step_1_calc = 0
     step_1_output = ""
     step_1_state = False
@@ -226,6 +234,7 @@ for pop_user in user_pool:
                 step_1_output = response.text
                 if "验证码" in step_1_output:
                     print('用户' + str(now_user) + "运行时返回需要验证码，将终止本次打卡，您需要在 Action 中合理配置运行时间.")
+                    exit(1)
                 mixed_token = response.text[response.text.rfind('ptopid'):response.text.rfind('"}}\r''\n</script>')]
                 if "hidden" in mixed_token:
                     step_1_calc += 1
@@ -285,7 +294,7 @@ for pop_user in user_pool:
                     break
                 elif "无权" in step_2_output:
                     print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
-                          + "次失败，可能是学号或密码有误，终止用户" + str(now_user) + "打卡，报告失败情况.")
+                          + "次失败，可能是学号或密码有误，或是间隔过短致需要验证码，终止用户" + str(now_user) + "打卡，报告失败情况.")
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
                         break
