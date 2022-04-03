@@ -13,9 +13,9 @@ import urllib3
 
 # ###### 自行配制区
 # 当每个用户多次失败时，可考虑增加重试次数
-requests.adapters.DEFAULT_RETRIES = 5
+# requests.adapters.DEFAULT_RETRIES = 5
 # 当靠后用户失败时，可考虑增加用户间延迟
-users_delay = 25
+users_delay = 36
 
 # ###### 调试区，项目可稳定使用时，两者均应是 False
 # 调试开关 正常使用请设定 False ，设定为 True 后会输出更多调试信息，且不再将真实姓名等隐私信息替换为 喵喵喵
