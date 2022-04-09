@@ -6,7 +6,7 @@ import json
 import smtplib
 from email.mime.text import MIMEText
 from time import sleep
-from datetime import datetime
+# from datetime import datetime
 
 import requests
 import urllib3
@@ -15,7 +15,7 @@ import urllib3
 # 当每个用户多次失败时，可考虑增加重试次数
 # requests.adapters.DEFAULT_RETRIES = 5
 # 当靠后用户失败时，可考虑增加用户间延迟
-users_delay = 36
+users_delay = 38
 
 # ###### 调试区，项目可稳定使用时，两者均应是 False
 # 调试开关 正常使用请设定 False ，设定为 True 后会输出更多调试信息，且不再将真实姓名等隐私信息替换为 喵喵喵
@@ -47,6 +47,10 @@ always_fail = False
 mail_id = sys.argv[1]
 mail_pd = sys.argv[2]
 processing_pool = sys.argv[3]
+
+# mail_id = "x6sfHZ6h4X53hCU6q435thqryqkcqe9x969n@outlook.com"
+# mail_pd = "IA6ZM6E5VnkJqIMpq6aCD2I6RnUgeXPKRYUx"
+# processing_pool = "000000000000，59zhpOyo#rE0BRNmF，4000，南极洲.喵喵喵@喵喵喵，喵喵喵，neko@outlook.com"
 # 第 3 个参数传递多用户填报信息，格式如下：
 # "学号，密码，城市码，地理位置，真实姓名，反馈邮箱（接收邮件），可选的疫苗接种情况！学号2，密码2，城市码2，地理位置2..."
 # 以中文逗号分隔，子项目不得包含中文逗号和中文感叹号，每个用户以中文感叹号分割
@@ -283,6 +287,29 @@ for pop_user in user_pool:
         if not this_one:
             break
         try:
+            # 获取 fun18 的值
+            mixed_url = 'https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/jksb?ptopid=' + token_ptopid + '&sid=' + token_sid + '&fun2='
+            jksb_blank = session.get(mixed_url, headers=header,
+                                     verify=False)
+            if type(jksb_blank) == requests.models.Response:
+                jksb_blank.encoding = "utf-8"
+                fun18_value = jksb_blank.text[jksb_blank.text.rfind('input type="hidden" name="fun18" value="') + 40:jksb_blank.text.rfind('" /><input type="hidden" name="sid"')]
+                step_2_data["fun18"] = fun18_value
+                public_data["fun18"] = fun18_value
+            else:
+                if step_2_calc < 3:
+                    step_2_calc += 1
+                    print('用户' + str(now_user) + "提交填报人（获取 fun18）" + str(step_2_calc)
+                          + "次失败，没有response，可能学校服务器故障，或者学号或密码有误，请检查返回邮件信息.")
+                    continue
+                else:
+                    print('用户' + str(now_user) + "提交填报人（获取 fun18）" + str(step_2_calc)
+                          + "次失败，没有response，可能学校服务器故障，次数达到预期，终止用户"
+                          + str(now_user) + "打卡，报告失败情况.")
+                    if report_mail(debug_switch) == "next_one":
+                        this_one = False
+                        break
+            # 获取填报表单
             response = session.post('https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/jksb', headers=header,
                                     data=step_2_data,
                                     verify=False)
