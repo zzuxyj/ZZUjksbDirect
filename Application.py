@@ -6,14 +6,10 @@ import json
 import smtplib
 from email.mime.text import MIMEText
 from time import sleep
-# from datetime import datetime
 
 import requests
 import urllib3
 
-# ###### 自行配制区
-# 当每个用户多次失败时，可考虑增加重试次数
-# requests.adapters.DEFAULT_RETRIES = 5
 # 当靠后用户失败时，可考虑增加用户间延迟
 users_delay = 38
 
@@ -23,33 +19,13 @@ debug_switch = False
 # 总是认为上报失败的标记 正常使用请设定为 False ，设定为 True 后会每次都发送失败邮件，即使是上报成功
 always_fail = False
 
-# # json 获取与创建
-# try:
-#     original_json = open("signed.json", "r")
-#     signed_json = json.load(original_json)
-#     original_json.close()
-# except FileNotFoundError:
-#     signed_json = {"date": ['2000', '1', '1'],
-#                    "signed": []}
-#
-# # 采集当前日期 注意这里的时间应该是GMT时间，落后北京时间8小时
-# severs_time = datetime.now().strftime('%Y-%m-%d-%H').split('-')  # ['2022', '03', '18', '23']
-# if int(severs_time[3]) > 15:
-#     severs_time[2] = str(int(severs_time[2]) + 1)
-# # 判断是否是新日期，若不是新日期则忽略，若是新日期则清空打卡列表
-# if severs_time == signed_json['date']:
-#     pass
-# else:
-#     signed_json['date'] = severs_time[0:3]
-#     signed_json['signed'] = []
-
 # 开始时接收传入的 Secrets
 mail_id = sys.argv[1]
 mail_pd = sys.argv[2]
 processing_pool = sys.argv[3]
 
 # mail_id = "x6sfHZ6h4X53hCU6q435thqryqkcqe9x969n@outlook.com"
-# mail_pd = "IA6ZM6E5VnkJqIMpq6aCD2I6RnUgeXPKRYUx"
+# mail_pd = "IA6ZM6E5VnkJqIMpq6aCD2I6RnUgeUx"
 # processing_pool = "000000000000，59zhpOyo#rE0BRNmF，4000，南极洲.喵喵喵@喵喵喵，喵喵喵，neko@outlook.com"
 # 第 3 个参数传递多用户填报信息，格式如下：
 # "学号，密码，城市码，地理位置，真实姓名，反馈邮箱（接收邮件），可选的疫苗接种情况！学号2，密码2，城市码2，地理位置2..."
@@ -98,11 +74,12 @@ for pop_user in user_pool:
     public_data['myvs_13a'] = city_code[:2]
     public_data['myvs_13b'] = city_code
     public_data['myvs_13c'] = location
-    if len(this_user) == 7:     # 当存在疫苗接种情况可选项时取其值，当值不在指定范围时忽略
+    if len(this_user) == 7:     # 当存在疫苗接种情况可选项时取其值，当值不在指定范围时忽略，按照默认 5 处理
         if (this_user[6] == "1") or (this_user[6] == "2") or (this_user[6] == "3") or (this_user[6] == "4"):
             public_data['myvs_26'] = this_user[6]
     if location_get:
         public_data['memo22'] = location_get
+    # 提前对指示标记进行赋值，避免处理异常时跳过赋值导致变量未定义错误
     step_1_calc = 0
     step_1_output = ""
     step_1_state = False
@@ -213,7 +190,7 @@ for pop_user in user_pool:
     header = {"Origin": "https://jksb.v.zzu.edu.cn",
               "Referer": "https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/first0",
               "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                            "Chrome/83.0.4103.116 Safari/537.36 Edg/83.0.478.56",
+                            "Chrome/97.0.4692.71 Safari/537.36",
               "Host": "jksb.v.zzu.edu.cn"
               }
     post_data = {"uid": user_id,
