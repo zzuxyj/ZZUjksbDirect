@@ -403,19 +403,19 @@ for pop_user in user_pool:
     if not this_one:
         continue
     result = step_3_output
-    if "感谢你今日上报" in result:
+    if "感谢你今日上报" or "感谢您今日上报" in result:
         result_flag = True
         # signed_json['signed'].append(now_user - 1)  # 打卡完成，记录入json
         print("用户" + str(now_user) + "上报成功")
     elif "由于如下原因" in result:
         result_flag = False
-        print("注意：用户" + str(now_user) + "上报失败！！代码需要更新，返回提示有新增或不匹配项目，或是今日已被审核，而不能再上报.")
+        print("注意：用户" + str(now_user) + "上报失败！！返回提示有原因导致上报失败，可能是新增了项目，或是今日已被审核，而不能再上报.")
         if report_mail(debug_switch) == "next_one":
             this_one = False
             break
     elif "重新登录" in result:
         result_flag = False
-        print("注意：用户" + str(now_user) + "上报失败！！可能是用户名或密码错误，或服务器响应超时.")
+        print("注意：用户" + str(now_user) + "上报失败！！可能是用户名或密码错误，或服务器响应超时，返回需要重新登录.")
         if report_mail(debug_switch) == "next_one":
             this_one = False
             break
