@@ -403,7 +403,7 @@ for pop_user in user_pool:
     if not this_one:
         continue
     result = step_3_output
-    if "感谢你今日上报" or "感谢您今日上报" in result:
+    if ("感谢你今日上报" in result) or ("感谢您今日上报" in result):
         result_flag = True
         # signed_json['signed'].append(now_user - 1)  # 打卡完成，记录入json
         print("用户" + str(now_user) + "上报成功")
