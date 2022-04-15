@@ -26,7 +26,7 @@ processing_pool = sys.argv[3]
 
 # mail_id = "x6sfHZ6h4X53hCU6q435thqryqkcqe9x969n@outlook.com"
 # mail_pd = "IA6ZM6E5VnkJqIMpq6aCD2I6RnUgeUx"
-# processing_pool = "000000000000，59zhpOyo#rE0BRNmF，4000，南极洲.喵喵喵@喵喵喵，喵喵喵，neko@outlook.com"
+# processing_pool = ""
 # 第 3 个参数传递多用户填报信息，格式如下：
 # "学号，密码，城市码，地理位置，真实姓名，反馈邮箱（接收邮件），可选的疫苗接种情况！学号2，密码2，城市码2，地理位置2..."
 # 以中文逗号分隔，子项目不得包含中文逗号和中文感叹号，每个用户以中文感叹号分割
@@ -354,7 +354,7 @@ for pop_user in user_pool:
             if type(response) == requests.models.Response:
                 response.encoding = "utf-8"
                 step_3_output = response.text
-                if "感谢你今日上报" in step_3_output:
+                if ("感谢你今日上报" in step_3_output) or ("感谢您今日上报" in step_3_output):
                     step_3_state = True
                     break
                 else:
