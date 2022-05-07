@@ -44,19 +44,22 @@ else:
 # 对单个用户进行循环
 now_user = 0
 for pop_user in user_pool:
-    # if now_user in signed_json['signed']:   # 若已打卡则直接跳过
-    #     print('用户' + str(now_user + 1) + '记录报告打卡完毕，跳过.')
-    #     continue
     now_user += 1
     this_one = True
     this_user = pop_user.split("，")
     # 单个用户信息检查
     if len(this_user) < 6:
-        print("用户" + str(now_user) + "池配置有误，必须重新配置！此用户信息条目数量少于6，将被忽略.")
+        print("用户" + str(now_user) + "池配置有误，请参照说明重新配置！此用户信息条目数量少于6，可能是将分割的中文逗号输入为英文逗号，此用户配置将被忽略.")
+        continue
+    if len(this_user[2]) != 4:
+        print("用户" + str(now_user) + "城市码描述有误，不配置隔离正确的长度应该是4，当前长度为" + str(len(this_user[2])) + '.')
+        continue
+    if ("iso" in this_user[2]) and ("loc" not in this_user[2]):
+        print("用户" + str(now_user) + "城市码描述有误，配置隔离时需要包含loc分割隔离后地址，当前不包含.")
         continue
     user_id = this_user[0]
     user_pd = this_user[1]
-    city_code = this_user[2]
+    city_code = this_user[2][0:4]
     if "@" in this_user[3]:
         # 若存在需要修正 memo22 显示位置的配置，则解析
         location = this_user[3].split("@")[0]
@@ -64,6 +67,10 @@ for pop_user in user_pool:
     else:
         location = this_user[3]
         location_get = False
+    # 判断是否被隔离
+    isolation = False
+    if "iso" in this_user[2]:
+        isolation = True
     real_name = this_user[4]
     mail_target = this_user[5]
     # 读取开放表单数据
@@ -74,6 +81,13 @@ for pop_user in user_pool:
     public_data['myvs_13a'] = city_code[:2]
     public_data['myvs_13b'] = city_code
     public_data['myvs_13c'] = location
+    if isolation:
+        city_code = this_user[2][7:11]
+        public_data['myvs_9'] = "是"
+        public_data['myvs_13a'] = city_code[:2]
+        public_data['myvs_13b'] = city_code
+        public_data['myvs_13c'] = this_user[14:]
+        location_get = this_user[14:]
     if len(this_user) == 7:     # 当存在疫苗接种情况可选项时取其值，当值不在指定范围时忽略，按照默认 5 处理
         if (this_user[6] == "1") or (this_user[6] == "2") or (this_user[6] == "3") or (this_user[6] == "4"):
             public_data['myvs_26'] = this_user[6]
@@ -430,7 +444,3 @@ for pop_user in user_pool:
     if always_fail:
         report_mail(debug_switch)
 
-# new_signed_json = open('signed.json', 'w')
-# json.dump(signed_json, new_signed_json)
-# new_signed_json.flush()
-# new_signed_json.close()
