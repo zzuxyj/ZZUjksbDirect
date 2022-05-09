@@ -1,0 +1,14 @@
+{
+  "symbols": ["fever", "cough", "weakness", "sore", "positive", "intimate", "secondary", "hospital", "central", "home", "room"],
+  "fever": "myvs_1",
+  "cough": "myvs_2",
+  "weakness": "myvs_3",
+  "sore": "myvs_4",
+  "positive": "myvs_5",
+  "intimate": "myvs_7",
+  "secondary": "myvs_8",
+  "hospital": "myvs_11",
+  "central": "myvs_12",
+  "home": "myvs_13",
+  "room": "myvs_15"
+}

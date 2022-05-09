@@ -26,9 +26,9 @@ processing_pool = sys.argv[3]
 
 # mail_id = "x6sfHZ6h4X53hCU6q435thqryqkcqe9x969n@outlook.com"
 # mail_pd = "IA6ZM6E5VnkJqIMpq6aCD2I6RnUgeUx"
-# processing_pool = ""
+# processing_pool = "2029788745693，eG4k%QgDF2KzF#M，2625，黑龙江省.风来市.火星蔬菜种植基地，凌墨，3，septemberRecever2413@qq.com，WeaknessSoreCentralConfirmed"
 # 第 3 个参数传递多用户填报信息，格式如下：
-# "学号，密码，城市码，地理位置，真实姓名，反馈邮箱（接收邮件），可选的疫苗接种情况！学号2，密码2，城市码2，地理位置2..."
+# "学号，密码，城市码，地理位置，真实姓名，反馈邮箱（接收邮件），可选的疫苗接种情况，可选的症状或特定情况描述！学号2，密码2，城市码2，地理位置2..."
 # 以中文逗号分隔，子项目不得包含中文逗号和中文感叹号，每个用户以中文感叹号分割
 
 # 禁用不安全链接的警告
@@ -49,17 +49,14 @@ for pop_user in user_pool:
     this_user = pop_user.split("，")
     # 单个用户信息检查
     if len(this_user) < 6:
-        print("用户" + str(now_user) + "池配置有误，请参照说明重新配置！此用户信息条目数量少于6，可能是将分割的中文逗号输入为英文逗号，此用户配置将被忽略.")
+        print("用户" + str(now_user) + "池配置有误，请参照说明重新配置！此用户信息条目数量少于6，需要填写的条目数至少为6，可能是将分割的中文逗号输入为英文逗号，此用户配置将被忽略.")
         continue
     if len(this_user[2]) != 4:
-        print("用户" + str(now_user) + "城市码描述有误，不配置隔离正确的长度应该是4，当前长度为" + str(len(this_user[2])) + '.')
-        continue
-    if ("iso" in this_user[2]) and ("loc" not in this_user[2]):
-        print("用户" + str(now_user) + "城市码描述有误，配置隔离时需要包含loc分割隔离后地址，当前不包含.")
+        print("用户" + str(now_user) + "城市码描述有误，正确的长度应该是4，当前长度为" + str(len(this_user[2])) + '，此用户将被跳过.')
         continue
     user_id = this_user[0]
     user_pd = this_user[1]
-    city_code = this_user[2][0:4]
+    city_code = this_user[2]
     if "@" in this_user[3]:
         # 若存在需要修正 memo22 显示位置的配置，则解析
         location = this_user[3].split("@")[0]
@@ -67,30 +64,35 @@ for pop_user in user_pool:
     else:
         location = this_user[3]
         location_get = False
-    # 判断是否被隔离
-    isolation = False
-    if "iso" in this_user[2]:
-        isolation = True
     real_name = this_user[4]
     mail_target = this_user[5]
     # 读取开放表单数据
     with open("config.json", "rb") as file_obj:
         public_data = json.load(file_obj)
         file_obj.close()
+    # 读取描述文件
+    with open("description.json", "rb") as file_obj:
+        description = json.load(file_obj)
+        file_obj.close()
     # 修改 公开表单默认值 为 特定值
     public_data['myvs_13a'] = city_code[:2]
     public_data['myvs_13b'] = city_code
     public_data['myvs_13c'] = location
-    if isolation:
-        city_code = this_user[2][7:11]
-        public_data['myvs_9'] = "是"
-        public_data['myvs_13a'] = city_code[:2]
-        public_data['myvs_13b'] = city_code
-        public_data['myvs_13c'] = this_user[14:]
-        location_get = this_user[14:]
-    if len(this_user) == 7:     # 当存在疫苗接种情况可选项时取其值，当值不在指定范围时忽略，按照默认 5 处理
+    # 解析条目长度为 7 时的情况
+    if len(this_user) == 7:
         if (this_user[6] == "1") or (this_user[6] == "2") or (this_user[6] == "3") or (this_user[6] == "4"):
             public_data['myvs_26'] = this_user[6]
+        else:
+            for descr in description["symbols"]:
+                if descr in this_user[6].lower():
+                    public_data[description[descr]] = "是"
+    # 解析条目长度为 8 时的情况
+    if len(this_user) == 8:
+        if (this_user[6] == "1") or (this_user[6] == "2") or (this_user[6] == "3") or (this_user[6] == "4"):
+            public_data['myvs_26'] = this_user[6]
+        for descr in description["symbols"]:
+            if descr in this_user[7].lower():
+                public_data[description[descr]] = "是"
     if location_get:
         public_data['memo22'] = location_get
     # 提前对指示标记进行赋值，避免处理异常时跳过赋值导致变量未定义错误
