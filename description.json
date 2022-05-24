@@ -1,14 +1,15 @@
 {
   "symbols": ["fever", "cough", "weakness", "sore", "positive", "intimate", "secondary", "hospital", "central", "home", "room"],
-  "fever": "myvs_1",
-  "cough": "myvs_2",
-  "weakness": "myvs_3",
-  "sore": "myvs_4",
-  "positive": "myvs_5",
-  "intimate": "myvs_7",
-  "secondary": "myvs_8",
-  "hospital": "myvs_11",
-  "central": "myvs_12",
-  "home": "myvs_13",
-  "room": "myvs_15"
+  "fever": ["myvs_1", "是"],
+  "cough": ["myvs_2", "是"],
+  "weakness": ["myvs_3", "是"],
+  "sore": ["myvs_4", "是"],
+  "positive": ["myvs_5", "是"],
+  "intimate": ["myvs_7", "是"],
+  "secondary": ["myvs_8", "是"],
+  "hospital": ["myvs_11", "是"],
+  "central": ["myvs_12", "是"],
+  "home": ["myvs_13", "是"],
+  "room": ["myvs_15", "是"],
+  "daily": ["myvs_9", "y"]
 }

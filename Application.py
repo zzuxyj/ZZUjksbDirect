@@ -36,6 +36,9 @@ urllib3.disable_warnings()
 
 # 分割多用户列表解析
 if "！" in processing_pool:
+    # 去除末尾分割多用户符号，仅检查、去除一次
+    if processing_pool[-1] == "！":
+        processing_pool = processing_pool[:-1]
     user_pool = processing_pool.split("！")
     print("当前用户数量为 " + str(len(user_pool)))
 else:
@@ -85,14 +88,14 @@ for pop_user in user_pool:
         else:
             for descr in description["symbols"]:
                 if descr in this_user[6].lower():
-                    public_data[description[descr]] = "是"
+                    public_data[description[descr][0]] = description[descr][1]
     # 解析条目长度为 8 时的情况
     if len(this_user) == 8:
         if (this_user[6] == "1") or (this_user[6] == "2") or (this_user[6] == "3") or (this_user[6] == "4"):
             public_data['myvs_26'] = this_user[6]
         for descr in description["symbols"]:
             if descr in this_user[7].lower():
-                public_data[description[descr]] = "是"
+                public_data[description[descr][0]] = description[descr][1]
     if location_get:
         public_data['memo22'] = location_get
     # 提前对指示标记进行赋值，避免处理异常时跳过赋值导致变量未定义错误
@@ -423,9 +426,15 @@ for pop_user in user_pool:
         result_flag = True
         # signed_json['signed'].append(now_user - 1)  # 打卡完成，记录入json
         print("用户" + str(now_user) + "上报成功")
+    elif "审核" in result:
+        result_flag = False
+        print("注意：用户" + str(now_user) + "上报失败！！返回提示今日已被审核，不能再上报.")
+        if report_mail(debug_switch) == "next_one":
+            this_one = False
+            break
     elif "由于如下原因" in result:
         result_flag = False
-        print("注意：用户" + str(now_user) + "上报失败！！返回提示有原因导致上报失败，可能是新增了项目，或是今日已被审核，而不能再上报.")
+        print("注意：用户" + str(now_user) + "上报失败！！返回提示有原因导致上报失败，可能是新增了项目，可能需要更新.")
         if report_mail(debug_switch) == "next_one":
             this_one = False
             break
