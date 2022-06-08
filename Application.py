@@ -35,11 +35,11 @@ processing_pool = sys.argv[3]
 urllib3.disable_warnings()
 
 # 分割多用户列表解析
-if "！" in processing_pool:
+if ";" in processing_pool:
     # 去除末尾分割多用户符号，仅检查、去除一次
-    if processing_pool[-1] == "！":
+    if processing_pool[-1] == ";":
         processing_pool = processing_pool[:-1]
-    user_pool = processing_pool.split("！")
+    user_pool = processing_pool.split(";")
     print("当前用户数量为 " + str(len(user_pool)))
 else:
     user_pool = [processing_pool]
@@ -49,7 +49,7 @@ now_user = 0
 for pop_user in user_pool:
     now_user += 1
     this_one = True
-    this_user = pop_user.split("，")
+    this_user = pop_user.split("-")
     # 单个用户信息检查
     if len(this_user) < 6:
         print("用户" + str(now_user) + "池配置有误，请参照说明重新配置！此用户信息条目数量少于6，需要填写的条目数至少为6，可能是将分割的中文逗号输入为英文逗号，此用户配置将被忽略.")
