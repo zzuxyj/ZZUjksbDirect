@@ -3,3 +3,4 @@ urllib3~=1.25.11
 cryptography
 pyOpenSSL
 certifi
+idna

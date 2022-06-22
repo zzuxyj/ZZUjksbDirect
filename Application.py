@@ -112,7 +112,8 @@ for pop_user in user_pool:
     result_flag = 0
     response = False
     mixed_token = False
-    all_input = sys.argv
+    verification_code = False
+    # all_input = sys.argv
     sleep(users_delay)   # 每个用户之间延时，以提高成功率
 
     # 创建发送邮件的方法
@@ -233,7 +234,12 @@ for pop_user in user_pool:
                 response.encoding = "utf-8"
                 step_1_output = response.text
                 if "验证码" in step_1_output:
-                    print('用户' + str(now_user) + "运行时返回需要验证码，将终止本次打卡，您需要在 Action 中合理配置运行时间.")
+                    if not verification_code:
+                        print('用户' + str(now_user) + "运行时，首次需要验证码，进程将挂起600秒，建议您在 Action 中合理配置运行时间.")
+                        verification_code = True
+                        sleep(600)
+                        continue
+                    print('用户' + str(now_user) + "运行时，多次需要验证码，将终止本次打卡，您需要在 Action 中合理配置运行时间.")
                     exit(1)
                 mixed_token = response.text[response.text.rfind('ptopid'):response.text.rfind('"}}\r''\n</script>')]
                 if "hidden" in mixed_token:
