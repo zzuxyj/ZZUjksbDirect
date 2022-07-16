@@ -9,6 +9,7 @@ from time import sleep
 
 import requests
 import urllib3
+import ddddocr
 
 # 当靠后用户失败时，可考虑增加用户间延迟
 users_delay = 38
@@ -114,6 +115,9 @@ for pop_user in user_pool:
     mixed_token = False
     verification_code = False
     error_details = False
+    fun18 = 0
+    fun118 = 0
+    captcha_tmp = 0
     # all_input = sys.argv
     sleep(users_delay)   # 每个用户之间延时，以提高成功率
 
@@ -205,6 +209,14 @@ for pop_user in user_pool:
         except smtplib.SMTPException:
             print('发送结果的邮箱设置可能异常，请检查邮箱和密码配置，以及发信SMTP服务器配置.')
             raise smtplib.SMTPException
+
+    # 创建识别验证码的方法
+    def captcha_bypass(img_link, header_ocr):
+        # 尝试使用 ddddocr 从链接识别验证码
+        captcha_ocr = ddddocr.DdddOcr()
+        img_b = requests.get(img_link, headers=header_ocr, verify=False).content
+        captcha_result = captcha_ocr.classification(img_b)
+        return captcha_result
 
 
     # 准备请求数据
@@ -301,7 +313,7 @@ for pop_user in user_pool:
                 jksb_blank.encoding = "utf-8"
                 fun18_value = jksb_blank.text[jksb_blank.text.rfind('input type="hidden" name="fun18" value="') + 40:jksb_blank.text.rfind('" /><input type="hidden" name="sid"')]
                 step_2_data["fun18"] = fun18_value
-                public_data["fun18"] = fun18_value
+                # public_data["fun18"] = fun18_value
             else:
                 if step_2_calc < 3:
                     step_2_calc += 1
@@ -322,8 +334,19 @@ for pop_user in user_pool:
             if type(response) == requests.models.Response:
                 response.encoding = "utf-8"
                 step_2_output = response.text
-                if "发热" in step_2_output:
+                if "监测指标" in step_2_output:
                     step_2_state = True
+                    # 获取 fun118 值
+                    fun118_value = step_2_output[step_2_output.rfind(
+                        'input type="hidden" name="fun118" value="') + 40:step_2_output.rfind(
+                        '" /><input type="hidden" name="fun3"')]
+                    step_2_data["fun118"] = fun118_value
+                    public_data["fun118"] = fun118_value
+                    # 识别验证码并存入表单待提交
+                    captcha_tmp = captcha_bypass("https://jksb.v.zzu.edu.cn/vls6sss/zzjlogin3d.dll/getonemencode?p2p="
+                                                 + token_ptopid, header)
+                    step_2_data["captcha"] = captcha_tmp
+                    public_data["myvs_94c"] = captcha_tmp
                     break
                 elif "无权" in step_2_output:
                     print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
@@ -386,6 +409,19 @@ for pop_user in user_pool:
                 if ("感谢你今日上报" in step_3_output) or ("感谢您今日上报" in step_3_output):
                     step_3_state = True
                     break
+                elif "输入验证码（四个数字）" in step_3_output:
+                    if step_3_calc < 3:
+                        step_3_calc += 1
+                        print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
+                              + "次失败，提示验证码异常，可能识别有误，将重试.")
+                        continue
+                    else:
+                        print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
+                              + "次失败，提示验证码异常，可能识别有误，失败次数达到预期，终止用户."
+                              + str(now_user) + "打卡，报告失败情况.")
+                        if report_mail(debug_switch) == "next_one":
+                            this_one = False
+                            break
                 else:
                     print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
                           + "次失败，可能打卡平台增加了新内容，或是用户"
