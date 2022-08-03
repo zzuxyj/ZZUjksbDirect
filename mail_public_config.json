@@ -7,8 +7,7 @@
   },
   "qq.com": {
     "host": "smtp.qq.com",
-    "port": "465",
-    "encryption": "STARTTLS"
+    "port": "465"
   },
   "outlook.com": {
     "host": "smtp.office365.com",

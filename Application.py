@@ -112,13 +112,16 @@ for pop_user in user_pool:
     result_flag = 0
     response = False
     mixed_token = False
-    all_input = sys.argv
+    verification_code = False
+    error_details = False
+    # all_input = sys.argv
     sleep(users_delay)   # 每个用户之间延时，以提高成功率
 
     # 创建发送邮件的方法
     def report_mail(full_info=debug_switch):
         if full_info:
             this_time_vars = {'result_flag': result_flag,
+                              'detailed_info': error_details,
                               'mixed_token': mixed_token,
                               'public_data': public_data,
                               'step_1_output': step_1_output,
@@ -137,6 +140,7 @@ for pop_user in user_pool:
                               }
         else:
             this_time_vars = {'result_flag': result_flag,
+                              'detailed_info': error_details,
                               'step_1_output': step_1_output.replace(real_name, "喵喵喵").replace(user_id, "喵喵喵"),
                               'step_1_calc': step_1_calc,
                               'step_1_state': step_1_state,
@@ -205,6 +209,7 @@ for pop_user in user_pool:
 
     # 准备请求数据
     session = requests.session()
+    session.keep_alive = False
     info = {}
     header = {"Origin": "https://jksb.v.zzu.edu.cn",
               "Referer": "https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/first0",
@@ -233,7 +238,12 @@ for pop_user in user_pool:
                 response.encoding = "utf-8"
                 step_1_output = response.text
                 if "验证码" in step_1_output:
-                    print('用户' + str(now_user) + "运行时返回需要验证码，将终止本次打卡，您需要在 Action 中合理配置运行时间.")
+                    if not verification_code:
+                        print('用户' + str(now_user) + "运行时，首次需要验证码，进程将挂起600秒，建议您在 Action 中合理配置运行时间.")
+                        verification_code = True
+                        sleep(600)
+                        continue
+                    print('用户' + str(now_user) + "运行时，多次需要验证码，将终止本次打卡，您需要在 Action 中合理配置运行时间.")
                     exit(1)
                 mixed_token = response.text[response.text.rfind('ptopid'):response.text.rfind('"}}\r''\n</script>')]
                 if "hidden" in mixed_token:
@@ -263,7 +273,7 @@ for pop_user in user_pool:
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
                         break
-        except requests.exceptions.SSLError:
+        except requests.exceptions.SSLError as error_details:
             if step_1_calc < 3:
                 step_1_calc += 1
                 print('用户' + str(now_user) + "获取 token 中" + str(step_1_calc)
@@ -347,7 +357,7 @@ for pop_user in user_pool:
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
                         break
-        except requests.exceptions.SSLError:
+        except requests.exceptions.SSLError as error_details:
             if step_2_calc < 3:
                 step_2_calc += 1
                 print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
@@ -397,7 +407,7 @@ for pop_user in user_pool:
                     if report_mail(debug_switch) == "next_one":
                         this_one = False
                         break
-        except requests.exceptions.SSLError:
+        except requests.exceptions.SSLError as error_details:
             if step_3_calc < 3:
                 step_3_calc += 1
                 print('用户' + str(now_user) + "提交表格中" + str(step_3_calc)
