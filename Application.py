@@ -9,7 +9,7 @@ from time import sleep
 
 import requests
 import urllib3
-import ddddocr
+# import ddddocr
 
 # 当靠后用户失败时，可考虑增加用户间延迟
 users_delay = 38
@@ -210,13 +210,13 @@ for pop_user in user_pool:
             print('发送结果的邮箱设置可能异常，请检查邮箱和密码配置，以及发信SMTP服务器配置.')
             raise smtplib.SMTPException
 
-    # 创建识别验证码的方法
-    def captcha_bypass(img_link, header_ocr):
-        # 尝试使用 ddddocr 从链接识别验证码
-        captcha_ocr = ddddocr.DdddOcr()
-        img_b = requests.get(img_link, headers=header_ocr, verify=False).content
-        captcha_result = captcha_ocr.classification(img_b)
-        return captcha_result
+#     # 创建识别验证码的方法
+#     def captcha_bypass(img_link, header_ocr):
+#         # 尝试使用 ddddocr 从链接识别验证码
+#         captcha_ocr = ddddocr.DdddOcr()
+#         img_b = requests.get(img_link, headers=header_ocr, verify=False).content
+#         captcha_result = captcha_ocr.classification(img_b)
+#         return captcha_result
 
 
     # 准备请求数据
@@ -342,11 +342,11 @@ for pop_user in user_pool:
                         '" /><input type="hidden" name="fun3"')]
                     step_2_data["fun118"] = fun118_value
                     public_data["fun118"] = fun118_value
-                    # 识别验证码并存入表单待提交
-                    captcha_tmp = captcha_bypass("https://jksb.v.zzu.edu.cn/vls6sss/zzjlogin3d.dll/getonemencode?p2p="
-                                                 + token_ptopid, header)
-                    step_2_data["captcha"] = captcha_tmp
-                    public_data["myvs_94c"] = captcha_tmp
+#                     # 识别验证码并存入表单待提交
+#                     captcha_tmp = captcha_bypass("https://jksb.v.zzu.edu.cn/vls6sss/zzjlogin3d.dll/getonemencode?p2p="
+#                                                  + token_ptopid, header)
+#                     step_2_data["captcha"] = captcha_tmp
+#                     public_data["myvs_94c"] = captcha_tmp
                     break
                 elif "无权" in step_2_output:
                     print('用户' + str(now_user) + "提交填报人" + str(step_2_calc)
